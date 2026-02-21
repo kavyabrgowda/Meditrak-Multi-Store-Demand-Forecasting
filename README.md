@@ -1,11 +1,4 @@
-# Multi-Store Demand Forecasting (Meditrak)
-
-## 👩‍💻 Developed By:
-Kavya B R  
-
-## 🏢 Internship:
-Artificial Intelligence (AI) & Machine Learning  
-Dyashin Technosoft Pvt Ltd  
+# Multi-Store Demand Forecasting (Meditrak) 
 
 ## 📌 Domain:
 Retail & Supply Chain  
