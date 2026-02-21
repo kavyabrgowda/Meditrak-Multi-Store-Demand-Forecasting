@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Meditrak Enterprise AI Dashboard</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI';
+            background: #f4f6f9;
+            margin: 40px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+        }
+        
+        h2 {
+            color: #34495e;
+        }
+        
+        .store-badge {
+            background: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .kpi-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .kpi {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .blue {
+            background: #3498db;
+        }
+        
+        .green {
+            background: #27ae60;
+        }
+        
+        .red {
+            background: #e74c3c;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+        }
+        
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background: #f2f2f2;
+        }
+        
+        .high {
+            background-color: #ffcccc;
+        }
+        
+        .medium {
+            background-color: #fff3cd;
+        }
+        
+        .low {
+            background-color: #d4edda;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            margin-right: 10px;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .refresh {
+            background: #3498db;
+        }
+        
+        .download {
+            background: #27ae60;
+        }
+        
+        select {
+            padding: 8px;
+            font-size: 14px;
+        }
+        /* Small notification */
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: none;
+        }
+        /* Smart Risk Alerts */
+        
+        .alert-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .alert-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .alert-success {
+            background: #27ae60;
+            color: white;
+        }
+    </style>
+</head>
+
+<body onload="checkRiskOnLoad()">
+
+    <h1>💊 Meditrak Enterprise AI Dashboard</h1>
+
+
+    <!-- Small Notification -->
+    <div id="notificationAlert" class="alert"></div>
+
+    {% if store %}
+    <div class="store-badge">
+        📍 Active Store: {{ store }}
+    </div>
+    {% endif %}
+
+    <!-- Hidden Risk Value -->
+    <input type="hidden" id="highRiskValue" value="{{ high_risk_count }}">
+
+    <!-- Smart Risk Alert -->
+    <div id="smartAlertContainer"></div>
+
+    <!-- Store + KPI -->
+    <div class="card">
+
+        <label><strong>Select Store:</strong></label>
+        <select id="storeDropdown" onchange="openStore()">
+        <option value="">-- Select Store --</option>
+        <option value="S1" {% if store=='S1' %}selected{% endif %}>Store S1</option>
+        <option value="S2" {% if store=='S2' %}selected{% endif %}>Store S2</option>
+        <option value="S3" {% if store=='S3' %}selected{% endif %}>Store S3</option>
+        <option value="S4" {% if store=='S4' %}selected{% endif %}>Store S4</option>
+        <option value="S5" {% if store=='S5' %}selected{% endif %}>Store S5</option>
+    </select>
+
+        <br><br>
+
+        <div class="kpi-box">
+            <div class="kpi blue">
+                Total Days<br>{{ total_days }}
+            </div>
+            <div class="kpi green">
+                Items Predicted<br>{{ items_predicted }}
+            </div>
+            <div class="kpi red">
+                High Risk Items<br>{{ high_risk_count }}
+            </div>
+        </div>
+
+        <br>
+
+        <button class="btn refresh" onclick="refreshPage()">🔄 Refresh</button>
+        <a class="btn download" href="/download?store={{ store }}" onclick="downloadAlert()">⬇ Download Forecast</a>
+    </div>
+
+    <!-- Toggle Daily -->
+    <div class="card">
+        <button class="btn refresh" onclick="toggleDailyAnalysis()">
+            📅 View Daily Sales Per Medicine
+        </button>
+    </div>
+
+    <!-- Daily Analysis -->
+    <div class="card" id="dailyAnalysisSection" style="display:none;">
+        <h2>📅 Daily Sales Per Medicine (Date-wise Analysis)</h2>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Item ID</th>
+                <th>Medicine</th>
+                <th>Units Sold</th>
+            </tr>
+
+            {% for row in daily_analysis %}
+            <tr>
+                <td>{{ row.Date }}</td>
+                <td>{{ row.Item_ID }}</td>
+                <td>{{ row.Medicine_Name }}</td>
+                <td>{{ row.Units_Sold }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Daily Overview -->
+    <div class="card">
+        <h2>📊 Daily Sales Overview (Average Units)</h2>
+        <table>
+            <tr>
+                <th>Item ID</th>
+                <th>Medicine</th>
+                <th>Avg Daily Sales</th>
+            </tr>
+
+            {% for row in daily_sales %}
+            <tr>
+                <td>{{ row.Item_ID }}</td>
+                <td>{{ row.Medicine_Name }}</td>
+                <td>{{ row.Units_Sold|round(2) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Forecast -->
+    <div class="card">
+        <h2>🔮 Predicted Demand & Reorder Planning</h2>
+        <table>
+            <tr>
+                <th>Item</th>
+                <th>Medicine</th>
+                <th>Predicted Demand</th>
+                <th>Current Stock</th>
+                <th>Safety Stock</th>
+                <th>Reorder Quantity</th>
+                <th>Risk</th>
+            </tr>
+
+            {% for row in forecast %}
+            <tr class="{{ row.Risk|lower }}">
+                <td>{{ row.Item_ID }}</td>
+                <td>{{ row.Medicine_Name }}</td>
+                <td>{{ row.Predicted_Demand|round(2) }}</td>
+                <td>{{ row.Current_Stock }}</td>
+                <td>{{ row.Safety_Stock }}</td>
+                <td>{{ row.Reorder_Quantity|round(2) }}</td>
+                <td>{{ row.Risk }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Top 5 -->
+    <div class="card">
+        <h2>🏆 Top 5 Selling Items</h2>
+        <table>
+            <tr>
+                <th>Item</th>
+                <th>Medicine</th>
+                <th>Total Sold</th>
+            </tr>
+
+            {% for row in top_items[:5] %}
+            <tr>
+                <td>{{ row.Item_ID }}</td>
+                <td>{{ row.Medicine_Name }}</td>
+                <td>{{ row.Units_Sold }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <script>
+        function openStore() {
+            var store = document.getElementById("storeDropdown").value;
+            if (store !== "") {
+                showAlert("Store " + store + " Loaded Successfully!");
+                setTimeout(function() {
+                    window.location.href = "/?store=" + store;
+                }, 800);
+            }
+        }
+
+        function toggleDailyAnalysis() {
+            var section = document.getElementById("dailyAnalysisSection");
+
+            if (section.style.display === "none") {
+                section.style.display = "block";
+            } else {
+                section.style.display = "none";
+            }
+        }
+
+        function refreshPage() {
+            showAlert("Dashboard Refreshed Successfully!");
+            setTimeout(function() {
+                window.location.reload();
+            }, 800);
+        }
+
+        function downloadAlert() {
+            showAlert("Forecast Download Started!");
+        }
+
+        function showAlert(message) {
+            var alertBox = document.getElementById("notificationAlert");
+            alertBox.innerHTML = message;
+            alertBox.style.display = "block";
+
+            setTimeout(function() {
+                alertBox.style.display = "none";
+            }, 3000);
+        }
+
+        function showSmartAlert(type, message) {
+            var container = document.getElementById("smartAlertContainer");
+            container.innerHTML =
+                "<div class='alert " + type + "' style='display:block;'>" +
+                message + "</div>";
+        }
+
+        function checkRiskOnLoad() {
+            var highRisk = parseInt(
+                document.getElementById("highRiskValue").value
+            );
+
+            if (highRisk >= 3) {
+                showSmartAlert(
+                    "alert-danger",
+                    "🔴 CRITICAL ALERT: " + highRisk +
+                    " High Risk Medicines Need Immediate Reorder!"
+                );
+            } else if (highRisk > 0) {
+                showSmartAlert(
+                    "alert-warning",
+                    "🟡 WARNING: " + highRisk +
+                    " Medicines Are Running Low."
+                );
+            } else {
+                showSmartAlert(
+                    "alert-success",
+                    "🟢 All Medicines Stock Levels Are Safe."
+                );
+            }
+        }
+    </script>
+
+</body>
+
+</html>

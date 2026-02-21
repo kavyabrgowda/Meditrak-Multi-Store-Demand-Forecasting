@@ -1,0 +1,9 @@
+item_id,medicine_name,base_price
+M101,Paracetamol,2.5
+M102,Amoxicillin,4.0
+M103,Cough Syrup,3.5
+M104,Vitamin D,15.0
+M105,Insulin,6.0
+M106,Aspirin,2.0
+M107,Metformin,5.0
+M108,Zinc Tablets,3.0

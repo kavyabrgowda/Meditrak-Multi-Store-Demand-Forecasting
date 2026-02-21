@@ -1,0 +1,6 @@
+Item_ID,Predicted_Demand,Current_Stock,Safety_Stock,Reorder_Quantity,Medicine_Name,Risk
+M101,63.14,85,20,0.0,Paracetamol,Low
+M102,77.19,88,20,9.19,Amoxicillin,Medium
+M103,52.03,53,20,19.03,Cough Syrup,Low
+M104,55.61,40,20,35.61,Vitamin D,Low
+M105,74.28,65,20,29.28,Insulin,Medium
